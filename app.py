@@ -1,7 +1,7 @@
 # imports
 import tweepy
 import json
-from pyspark import SparkContext
+from processing import SparkContext
 
 
 logFile = "tweets.csv"
@@ -12,12 +12,12 @@ words = lines_nonempty.flatMap(lambda x: x.split())
 wordcounts = words.map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y).map(lambda x: (x[1], x[0])).sortByKey(
     False)
 print(wordcounts.take(30))
-"""for word in wordcounts.take(30):
+for word in wordcounts.take(30):
     if str(word[1]) in "CrisisLexLexicon/CrisisLexRec.txt":
         print(word[1])
 sc.stop()
 
-"""
+
 sc = SparkContext.getOrCreate()
 sentences = sc.textFile(logFile) \
     .glom() \
@@ -75,7 +75,7 @@ def read_tweet(file, api):
     # print(temp)
     for line in file:
         try:
-            if len(temp) > 200:
+            if len(temp) > 1000:
                 break
             tweet = api.get_status(int(line))
             en = str(tweet.text)
@@ -94,5 +94,7 @@ def read_tweet(file, api):
 def main():
     api = tokenization()
     lex = lex_opener("CrisisLexLexicon/CrisisLexRec.txt")
+    read_tweet("irma_tweet_ids.txt", api)
     # lookup_tweets("irma_tweet_ids.txt", api)
-    wordcounter()
+
+
