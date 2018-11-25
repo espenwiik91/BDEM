@@ -17,6 +17,10 @@ import operator
 # import nltk
 # nltk.download('stopwords')
 
+"""
+    Initiates different variables to be used by programs later. 
+"""
+
 global Logger
 logFile = "irmaHurricaneTweets.csv"
 tweet_reader = open(logFile, "r")
@@ -47,7 +51,7 @@ def get_tweet_id(line):
     return tweet_id
 
 
-def get_tweets_bulk(api, file):
+def get_tweets_bulk(api, file, outputcsvfile):
     '''
     Fetches content for tweet IDs in a file using bulk request method,
     which vastly reduces number of HTTPS requests compared to above;
@@ -66,7 +70,7 @@ def get_tweets_bulk(api, file):
             # API limits batch size
             if len(tweet_ids) == batch_size:
                 Logger.debug('get_tweets_bulk: fetching batch of size %d', batch_size)
-                get_tweet_list(api, tweet_ids)
+                get_tweet_list(api, tweet_ids, outputcsvfile=outputcsvfile)
                 tweet_ids = list()
 
 
@@ -78,27 +82,22 @@ def get_times(openedcsv):
         line = line[-22:]
         times.write(line)
 
-
-def get_tweet_list(api, idlist):
-    '''
-    Invokes bulk lookup method.
-    Raises an exception if rate limit is exceeded.
-    '''
-    csvWriter = csv.DictWriter
-    # fetch as little metadata as possible
+'''
+    Retrieves tweets in bulk. Outputs to a csv file with tweet.text and tweet.created_at.
+'''
+def get_tweet_list(api, idlist, outputcsvfile):
+    # Feeds a list of ids, and sends the request to the Twitter API. Parameters decrease metadata.
     tweets = api.statuses_lookup(id_=idlist, include_entities=False, trim_user=True)
+    # Warns users if response size is smaller than expected. < 100.
     if len(idlist) != len(tweets):
         Logger.warn('get_tweet_list: unexpected response size %d, expected %d', len(tweets), len(idlist))
-
-    with open('irmaHurricaneTweets.csv', 'a', newline='') as csvFile:
+    # Opens csv file and writes rows with the requested twitter data.
+    with open(outputcsvfile, 'a', newline='') as csvFile:
         for tweet in tweets:
             tweetText = tweet.text.encode('utf-8')
             tweetDate = str(tweet.created_at).encode('utf-8')
             writer = csv.writer(csvFile)
             writer.writerows(zip([tweetText], [tweetDate]))
-            print(tweetText)
-            print(tweetDate)
-            csvFile.flush()
     return csvFile
 
 
@@ -107,15 +106,15 @@ def main():
     logging.basicConfig(level=logging.WARN)
     global Logger
 
-    """These function calls has to be done the first time running the program.
-    They are used to write twitter texts to the file "irmaHurricaneTweets.csv
+    # These function calls has to be done the first time running the program.
+    # They are used to write twitter texts to the file "irmaHurricaneTweets.csv
+
     Logger = logging.getLogger('get_tweets_by_id')
-    get_tweets_bulk(api=authentication(), file="irma_tweet_ids.txt")
-    #get_times(tweet_reader, tweet_times)
+    get_tweets_bulk(api=authentication(), file="irma_tweet_ids.txt", outputcsvfile="test123.csv")
     """
     td.dialogue(sparky)
     sparky.stopspark()
-
+    """
 
 if __name__ == '__main__':
     main()

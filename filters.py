@@ -12,7 +12,8 @@ nltk.download('stopwords')
 stopWords = set(stopwords.words('english'))
 # adding 'RT, 'http', '@', '\\n\\n' to the set of stopwords because such information is non-informative for
 # several analysis purposes. This program finds retweets, for instance, in other ways
-stopWords.update(['RT', 'http', '@', '\\n\\n'])
+stopWords.update(
+    ['RT', 'http', '@', '\\n\\n', '.', ',', ':', ';', '/', '-', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '|'])
 
 
 # print(stopWords)
@@ -31,10 +32,6 @@ def filter_whole_file(source_file, dest_name, lex):
                     suitable = False
         if suitable == True:
             writer.writerow(row)
-
-
-def csv():
-    pass
 
 
 def filter_by_crisislex(wordlist, lex):
@@ -88,7 +85,23 @@ def filter_RT_for_bigrams(wordlist):
 def filter_by_stopwords(listofwords, stopWords):
     filteredlist = []
     for word in listofwords:
-        if word not in stopWords:
+        containsstopword = False
+        for stop in stopWords:
+            if stop.lower() in word[1].lower():
+                # print(stop, word)
+                containsstopword = True
+        if containsstopword == False:
             filteredlist.append(word)
+    if len(filteredlist) > 10:
+        del filteredlist[2000:]
     return filteredlist
+
+def find_crisis_word_in_total_word(stopwordlist, disasterlist):
+    for element in stopwordlist:
+        for d in disasterlist:
+            #d, element = d.split(","), element.split(",")
+            if d[1].lower() in element[1].lower():
+                print("yolo")
+
+
 

@@ -1,14 +1,13 @@
 import csv
 from collections import Counter
 from nltk.corpus import stopwords
-import string
-from filters import filter_by_crisislex_for_bigrams, \
-    filter_by_crisislex, filter_by_stopwords  # filter_by_tweet_jiberish  # filter_whole_file
+from filters import filter_by_crisislex_for_bigrams, filter_by_crisislex
 import re
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 import numpy as np
-from operator import itemgetter
+import psutil
 
 """
 These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
@@ -19,7 +18,7 @@ nltk.download('stopwords')
 stopWords = set(stopwords.words('english'))
 # adding 'RT, 'http', '@', '\\n\\n' to the set of stopwords because such information is non-informative for
 # several analysis purposes.
-stopWords.update(['RT', 'http', '@', '\\n\\n'])
+stopWords.update(['RT', 'http', '@', '\\n\\n', '.', ',', ':', ';', '/', '-', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '|'])
 tempsetadjusted = False
 crisislex = "CrisisLexLexicon/CrisisLexRec.txt"
 
@@ -42,10 +41,10 @@ def dialogue(sc):
     while True:
         try:
             datasetchoice = int(input("1 or 2"))
-            print("\n")
+            assert datasetchoice == 1 or datasetchoice == 2
             break
         except:
-            print("type 1 or 2")
+            print("Type 1 or 2")
     if datasetchoice == 2:
         divide_dataset(sc, readtweets)
         return
@@ -65,16 +64,19 @@ def whole_set(sc, readtweets):
         except:
             print("Type 1, 2, 3 or 4")
     if choice == 1:
-        print("Here are the n most disaster-related words in this dataset")
+        print("Here are the 10 most disaster-related words in this dataset")
         res1 = sc.wordcounter("irmaHurricaneTweets.csv", 500)
         filtered1 = filter_by_crisislex(res1, crisislexlist)
         make_table(filtered1, "word", "frequency")
+        make_histogram(filtered1)
+        make_scatterplot(filtered1)
         print("\n")
     if choice == 2:
-        print("Here are the n most disaster-related combintion of two words in this dataset")
+        print("Here are the 10 most disaster-related combintion of two words in this dataset")
         res3 = (sc.bigram("irmaHurricaneTweets.csv", 500))
         filtered2 = (filter_by_crisislex_for_bigrams(res3, crisislexlist))
         make_table(filtered2, "word", "frequency")
+        make_histogram(filtered2)
         print("\n")
     if choice == 3:
         rtword = str(input(
@@ -113,11 +115,13 @@ def whole_set(sc, readtweets):
         res5 = sc.bigram("irmaHurricaneTweets.csv", 500)
         filtered3 = filter_by_crisislex(res4, crisislexlist)
         filtered4 = filter_by_crisislex_for_bigrams(res5, crisislexlist)
-        print("Here are the n most disaster-related words in this dataset")
+        print("Here are the 10 most disaster-related words in this dataset")
         make_table(filtered3, "word", "frequency")
+        make_histogram(filtered3)
         print("\n")
-        print("Here are the n most disaster-related words combination of two words in this dataset")
+        print("Here are the 10 most disaster-related words combination of two words in this dataset")
         make_table(filtered4, "word", "frequency")
+        make_histogram(filtered4)
         print("\n")
         print("You will now be shown the most popular URLs")
         urls = top5_tweets_with_filterword("irmaHurricaneTweets.csv", "http")
@@ -129,6 +133,7 @@ def whole_set(sc, readtweets):
                 finalurls.append(element)
         for link in finalurls:
             print(link)
+        print("\n")
         rtword = str(input(
             ("This function lets you find the most retweeted tweets\n"
              "You can either choose to find the five most retweeted tweets in general, or choose to search for a keyword\n"
@@ -149,11 +154,14 @@ def whole_set(sc, readtweets):
             for tweet in retweets:
                 print(tweet)
         print("\n")
-    try:
-        repeat = int(input(
-            "Do you want to stop analyzing(1), do another analysis on this dataset(2), or do an anlysis on a subset of the dataset (3)"))
-    except:
-        print("type 1, 2 or 3")
+    while True:
+        try:
+            repeat = int(input(
+                "Do you want to stop analyzing(1), do another analysis on this dataset(2), or do an anlysis on a subset of the dataset (3)"))
+            assert repeat == 1 or repeat == 2 or repeat == 3
+            break
+        except:
+            print("Type 1, 2 or 3")
     if repeat == 1:
         print("Finished")
     if repeat == 2:
@@ -165,12 +173,15 @@ def whole_set(sc, readtweets):
 def divide_dataset(sc, readtweets):
     print("Which intervall of the ", len(readtweets), " tweets do you want to extract? Type a number to decide where\n"
                                                       "the subset starts, and a number to decide where it ends \n"
-                                                      "It should at least contain 10 000 tweets")
-    try:
-        start = int(input("start"))
-        stop = int(input("stop"))
-    except:
-        print("type two numbers")
+                                                       "It should at least contain 10 000 tweets")
+    while True:
+        try:
+            start = int(input("start"))
+            stop = int(input("stop"))
+            assert start >= 0 and start < stop and stop <= len(readtweets)
+            break
+        except:
+            print("Type two valid numbers")
     global tempsetadjusted
     if tempsetadjusted == False:
         adjust_csv(readtweets, start, stop)
@@ -193,14 +204,18 @@ def divide_dataset(sc, readtweets):
     if choice == 1:
         res1 = sc.wordcounter("temp.csv", 500)
         filtered1 = (filter_by_crisislex(res1, crisis))
-        print("Here are the 10 most disaster-related words in this dataset")
+        print("Here are the 10 most disaster-related words in this dataset"
+              ". A bar chart is shown in SciView")
         make_table(filtered1, "word", "frequency")
+        make_histogram(filtered1)
         print("\n")
     if choice == 2:
         res2 = (sc.bigram("temp.csv", 500))
         filtered2 = (filter_by_crisislex_for_bigrams(res2, crisis))
-        print("Here are the 10 most disaster-related words combination of two words in this dataset")
+        print("Here are the 10 most disaster-related words combination of two words in this dataset"
+              ". A bar chart is shown in SciView")
         make_table(filtered2, "word", "frequency")
+        make_histogram(filtered2)
         print("\n")
     if choice == 3:
         rtword = str(input(
@@ -239,10 +254,14 @@ def divide_dataset(sc, readtweets):
         res4 = sc.bigram("temp.csv", 500)
         filtered3 = filter_by_crisislex(res3, crisis)
         filtered4 = filter_by_crisislex_for_bigrams(res4, crisis)
-        print("Here are the 10 most disaster-related words in this dataset")
+        print("Here are the 10 most disaster-related words in this dataset"
+              ". A bar chart is shown in SciView")
         make_table(filtered3, "word", "frequency")
-        print("Here are the 10 most disaster-related words combination of two words in this dataset")
+        make_histogram(filtered3)
+        print("Here are the 10 most disaster-related words combination of two words in this dataset"
+              ". A bar chart is shown in SciView")
         make_table(filtered4, "word", "frequency")
+        make_histogram(filtered4)
         print("\n")
         print("You will now be shown tweets containing the most popular URLs")
         print("You will now be shown the most popular URLs")
@@ -276,12 +295,15 @@ def divide_dataset(sc, readtweets):
             for tweet in retweets:
                 print(tweet)
         print("\n")
-    try:
-        repeat = int(input(
-            "Do you want to stop analyzing(1), do another anlysis on another subset of the dataset (2), "
-            "or do an analysis on the whole dataset (3)"))
-    except:
-        print("type 1, 2 or 3")
+    while True:
+        try:
+            repeat = int(input(
+                "Do you want to stop analyzing(1), do another anlysis on another subset of the dataset (2), "
+                "or do an analysis on the whole dataset (3)"))
+            assert repeat == 1 or repeat == 2 or repeat == 3
+            break
+        except:
+            print("type 1, 2 or 3")
     if repeat == 1:
         print("Finished")
     if repeat == 2:
@@ -342,13 +364,56 @@ def top5_tweets(csvFileWithTweetTextAndTweetDate):
     return counter
 
 
-def make_histogram(listOfTuples):
-    sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
-    df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
-    df.plot(kind='bar', logy=True, x='word')
-    plt.bar(df['word'], df['frequency'], log=True, width=0.8)
-    plt.show()
+"""
+   Versatile function that can take in any list of tuples and visualize using a bar chart. Functions on both single words
+   and bigrams.
+"""
 
+# Functions that plots out a bar chart from input of tuples.
+def make_histogram(listOfTuples):
+   # Sorts according to integer in first column.
+   sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
+   # Adds it to a pandas DataFrame for further manipulation.
+   df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
+   # Plots the final result with a LogScale.
+   df.plot(kind='bar', logy=True, x='word', width=0.4)
+   # Displays the finished plot.
+   plt.show()
+
+#make_histogram(data)
+
+def make_scatterplot(listOfTuples):
+    # Takes in a list of tuples and sorts it from large to small.
+    sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
+    # Creates a pandas DataFrame to manipulate the data easily. Creates the columns frequency and word.
+    df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
+    s = [df['frequency']]
+    words = df['word']
+    # Plot figure size.
+    plt.figure(figsize=(10, 10), dpi=80)
+    # Possible positions for the circles. Pre-assigned to help readability.
+    x = (7, 15, 22, 22, 7, 27, 10)
+    y = (7, 15, 22, 7, 15, 15, 23)
+    # Set axes lengths.
+    axes = plt.gca()
+    axes.set_xlim([0, 30])
+    axes.set_ylim([0, 30])
+    # Creates a random value that later is used to create randomized colors.
+    vals = np.linspace(0, 1, 256)
+    np.random.shuffle(vals)
+    # Plots the scatterplot with x and y. s=size, c=color.
+    plt.scatter(x[:len(df['word'])], y[:len(df['word'])], s=s, c=vals[:len(df['word'])])
+    # Iterates through list of words and adds text.
+    for i, word in enumerate(words):
+        x_chords = x[i]
+        y_chords = y[i]
+        # Adds text and adds border color.
+        txt = plt.text(x_chords-1, y_chords, word, fontfamily="serif",
+                       fontsize=15, fontweight="extra bold", color="black",
+                       multialignment="center")
+        txt.set_path_effects([pe.withStroke(linewidth=4, foreground='w')])
+    plt.axis('off')
+    plt.show()
 
 def make_table(listOfTuples, firstheader, secondheader):
     sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
