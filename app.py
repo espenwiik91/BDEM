@@ -1,100 +1,122 @@
-# imports
 import tweepy
-import json
-from processing import SparkContext
+import csv
+import logging
+from processing import Processing
+from nltk.corpus import stopwords
+# from nltk.tokenize import sent_tokenize, word_tokenize
+import pandas as pd
+import matplotlib.pyplot as plt
+import terminaldialogue as td
+import numpy as np
+
+"""
+import itertools
+import operator
+"""
+
+# import nltk
+# nltk.download('stopwords')
+
+"""
+    Initiates different variables to be used by programs later. 
+"""
+
+global Logger
+logFile = "irmaHurricaneTweets.csv"
+tweet_reader = open(logFile, "r")
+proxy = "temp.csv"
+crisislex = "CrisisLexLexicon/CrisisLexRec.txt"
+stopWords = set(stopwords.words('english'))
+
+CONSUMER_KEY = 'er2Gj89d8Mzcx0Uy6enUGY5Pl'
+CONSUMER_SECRET = 'toow54gCrcGut2OdH3CWCxOqsBDVphk6UMKUTVudNLnMRUnSMR'
+OAUTH_TOKEN = '1053267399309438976-A5b36TUs8H525zZAwDJsmqt7tun6D0'
+OAUTH_TOKEN_SECRET = '0kbdfB6sdfgfG7xis3Fp2UjVlHcNEQEXclyLinOmPut1R'
+
+# Twitter API Limit.
+batch_size = 100
 
 
-logFile = "tweets.csv"
-sc = SparkContext.getOrCreate()
-lines = sc.textFile(logFile)
-lines_nonempty = lines.filter(lambda x: len(x) > 0)
-words = lines_nonempty.flatMap(lambda x: x.split())
-wordcounts = words.map(lambda x: (x, 1)).reduceByKey(lambda x, y: x + y).map(lambda x: (x[1], x[0])).sortByKey(
-    False)
-print(wordcounts.take(30))
-for word in wordcounts.take(30):
-    if str(word[1]) in "CrisisLexLexicon/CrisisLexRec.txt":
-        print(word[1])
-sc.stop()
-
-
-sc = SparkContext.getOrCreate()
-sentences = sc.textFile(logFile) \
-    .glom() \
-    .map(lambda x: " ".join(x)) \
-    .flatMap(lambda x: x.split("."))
-bigrams = sentences.map(lambda x: x.split()) \
-    .flatMap(lambda x: [((x[i], x[i + 1]), 1) for i in range(0, len(x) - 1)])
-
-freq_bigrams = bigrams.reduceByKey(lambda x, y: x + y) \
-    .map(lambda x: (x[1], x[0])) \
-    .sortByKey(False)
-print(freq_bigrams.take(10))
-sc.stop()
-
-
-
-# Uses twitter credentials to get connection to twitter. Connection is declared in variable api, which is returned
-from tweepy.streaming import json
-
-
-def tokenization():
-    auth = tweepy.OAuthHandler("SQEmFzL7P2C9xe0Bcs8FZh0D3", "DRC5AoeM6wGXkfMD7pZ6HFFfLAqBVIi5Qk0Zo5uwLLA3HPHLKx")
-    auth.set_access_token("1051831213109993472-sYqCSmCkPxDWMBmLplmuHR5rHchLwp",
-                          "BGQ757siUo8gei8tVgCZxGK3aAlH85TyJBGyzU7zYituN")
+def authentication():
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
     api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     return api
 
 
-# Opens and returns a disaster lexicon from CrisisLex
-def lex_opener(lexicon):
-    lex = open(lexicon)
-    lex = lex.read()
-    return lex
+def get_tweet_id(line):
+    tweet_id_raw = line.decode('utf-8').strip()
+    tweet_id = tweet_id_raw + ','
+    print(tweet_id)
+    return tweet_id
 
 
-def create_csv():
-    csvfile = open("tweets.csv", "w")
-    return csvfile
+def get_tweets_bulk(api, file, outputcsvfile):
+    '''
+    Fetches content for tweet IDs in a file using bulk request method,
+    which vastly reduces number of HTTPS requests compared to above;
+    however, it does not warn about IDs that yield no tweet.
+
+    `api`: Initialized, authorized API object from Tweepy
+    `file`: Path to file containing IDs
+    '''
+    # process IDs from the file
+    tweet_ids = list()
+    with open(file, 'rb') as idfile:
+        for line in idfile:
+            tweet_id = get_tweet_id(line)
+            Logger.debug('Enqueing tweet ID %s', tweet_id)
+            tweet_ids.append(tweet_id)
+            # API limits batch size
+            if len(tweet_ids) == batch_size:
+                Logger.debug('get_tweets_bulk: fetching batch of size %d', batch_size)
+                get_tweet_list(api, tweet_ids, outputcsvfile=outputcsvfile)
+                tweet_ids = list()
 
 
-def lookup_tweets(tweet_IDs, api):
-    for status in tweepy.Cursor(api.status_lookup, id=tweet_IDs).items():
-        print(json.dumps(status))
+# Takes in csv file with tweet text and tweet times as the columns on each row.
+# Writes a new csv file with only tweet times
+def get_times(openedcsv):
+    times = open("tweet_times.csv", "w")
+    for line in openedcsv:
+        line = line[-22:]
+        times.write(line)
 
-
-def process_or_store(tweet):
-    print(json.dumps(tweet))
-
-
-def read_tweet(file, api):
-    file = open(file, "r")
-    csvfile = open("tweets.csv", "w+", encoding='utf-8')
-    counter = 0
-    temp = list()
-    # print(temp)
-    for line in file:
-        try:
-            if len(temp) > 1000:
-                break
-            tweet = api.get_status(int(line))
-            en = str(tweet.text)
-            to = str(tweet.created_at)
-            info = str(en + " " + to)
-            temp.append(info)
-        except:
-            pass
-
-    for element in temp:
-        csvfile.write(element)
-        csvfile.write("\n")
-    csvfile.close()
+'''
+    Retrieves tweets in bulk. Outputs to a csv file with tweet.text and tweet.created_at.
+'''
+def get_tweet_list(api, idlist, outputcsvfile):
+    # Feeds a list of ids, and sends the request to the Twitter API. Parameters decrease metadata.
+    tweets = api.statuses_lookup(id_=idlist, include_entities=False, trim_user=True)
+    # Warns users if response size is smaller than expected. < 100.
+    if len(idlist) != len(tweets):
+        Logger.warn('get_tweet_list: unexpected response size %d, expected %d', len(tweets), len(idlist))
+    # Opens csv file and writes rows with the requested twitter data.
+    with open(outputcsvfile, 'a', newline='') as csvFile:
+        for tweet in tweets:
+            tweetText = tweet.text.encode('utf-8')
+            tweetDate = str(tweet.created_at).encode('utf-8')
+            writer = csv.writer(csvFile)
+            writer.writerows(zip([tweetText], [tweetDate]))
+    return csvFile
 
 
 def main():
-    api = tokenization()
-    lex = lex_opener("CrisisLexLexicon/CrisisLexRec.txt")
-    read_tweet("irma_tweet_ids.txt", api)
-    # lookup_tweets("irma_tweet_ids.txt", api)
+    sparky = Processing()
+    logging.basicConfig(level=logging.WARN)
+    global Logger
+
+    # These function calls has to be done the first time running the program.
+    # They are used to write twitter texts to the file "irmaHurricaneTweets.csv
+    Logger = logging.getLogger('get_tweets_by_id')
+    #fhand = open("irmaHurricaneTweets.csv", "w+")
+    #fhand.truncate()
+    #fhand.close()
+    #get_tweets_bulk(api=authentication(), file="irma_tweet_ids.txt", outputcsvfile="irmaHurircaneTweets.csv")
+
+    td.dialogue(sparky)
+    sparky.stopspark()
 
 
+if __name__ == '__main__':
+    main()

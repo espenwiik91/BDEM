@@ -9,11 +9,11 @@ import matplotlib.patheffects as pe
 import numpy as np
 import psutil
 
-"""
-These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
-import nltk
-nltk.download('stopwords')
-"""
+
+#These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
+#import nltk
+#nltk.download('stopwords')
+
 
 stopWords = set(stopwords.words('english'))
 # adding 'RT, 'http', '@', '\\n\\n' to the set of stopwords because such information is non-informative for
@@ -22,20 +22,20 @@ stopWords.update(['RT', 'http', '@', '\\n\\n', '.', ',', ':', ';', '/', '-', '1'
 tempsetadjusted = False
 crisislex = "CrisisLexLexicon/CrisisLexRec.txt"
 
-
+#Initiates a terminal-based dialogue with the program user. Takes a SparkContext object as argument.
+#Based on the decicions of the user, the program proceeds to whole_set() or divide_dataset().
+#When whole_set() or divide_dataset() is called, the SparkContext object is passed on as argument
+#in addition to a reader object for the csv file "irmaHurricaneTweets".
+#Dialogue() is called in the main function of the app class.
 def dialogue(sc):
     tweetcsv = open("irmaHurricaneTweets.csv", "r")
     readtweets = tweetcsv.readlines()
-    # print(sc.retweets(readtweets))
     first = readtweets[0][-22:]
     last = readtweets[-1][-22:]
-    # print(sc.retweets(readtweets))
-    # print(most_common(readtweets))
     print("################################################################# \n"
           "Welcome to this tool for twitter analysis during disaster events")
     print("In this program, tweets from the irma hurricane are analyzed. \n"
-          "The dataset contains tweets from", first, "to", last, "\n"
-                                                                 "and it contains: ", len(readtweets),
+          "The dataset contains tweets from", first, "to", last, "and it contains: ", len(readtweets),
           "number of tweets.")
     print("Do you want to analyze the whole dataset (1), or choose a subset of the dataset(2)?")
     while True:
@@ -52,7 +52,7 @@ def dialogue(sc):
         whole_set(sc, readtweets)
         return
 
-
+#This function is called in either dialogue() or divide_dataset(). It takes a SparkContext object as argument
 def whole_set(sc, readtweets):
     crisislexlist = lex_to_list(crisislex)
     while True:
