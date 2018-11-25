@@ -79,7 +79,6 @@ def whole_set(sc, readtweets):
         filtered1 = filter_by_crisislex(res1, crisislexlist)
         make_table(filtered1, "word", "frequency")
         make_histogram(filtered1)
-        make_scatterplot(filtered1)
         print("\n")
     if choice == 2:
         print("Here are the 10 most disaster-related combintion of two words in this dataset")
@@ -109,7 +108,7 @@ def whole_set(sc, readtweets):
                 print(tweet)
         print("\n")
     if choice == 4:
-        print("This function might take some time. Don't type anything \n"
+        print("This function might take some time. Don't press anything untill URLS are shown\n"
               "Top five URLs:")
         urls = top5_tweets_with_filterword("irmaHurricaneTweets.csv", "http")
         finalurls = []
@@ -133,7 +132,8 @@ def whole_set(sc, readtweets):
         make_table(filtered4, "word", "frequency")
         make_histogram(filtered4)
         print("\n")
-        print("You will now be shown the most popular URLs")
+        print("This function might take some time. Don't press anything until URLs are shown\n"
+              "Top five URLs:")
         urls = top5_tweets_with_filterword("irmaHurricaneTweets.csv", "http")
         finalurls = []
         for url in urls:
@@ -143,18 +143,16 @@ def whole_set(sc, readtweets):
                 finalurls.append(element)
         for link in finalurls:
             print(link)
-        print("\n")
         rtword = str(input(
-            ("This function lets you find the most retweeted tweets\n"
-             "You can either choose to find the five most retweeted tweets in general, or choose to search for a keyword\n"
-             "Type a word to search for a chosen keyword, or press enter if you the most retweeted overall\n"
-             "Chosen keywords will not always give a result"
+            ("This function lets you find the most retweeted tweets - overall or containing a chosen keyword\n"
+             "Enter a keyword for a specific search or leave the field empty and press enter to search\n"
+             "This function might take some time. Don't press anything until tweets are shown\n"
              "Type a word, or hit enter. \n")))
         if len(rtword) != 0:
             print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", rtword))
             while True:
                 print("Type a new word if you want to try another keyword, or hit enter to proceed")
-                choice = str(input("Type a word or hit enter"))
+                choice = str(input("Type a word and/or hit enter\n"))
                 if len(choice) != 0:
                     print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", choice))
                 else:
@@ -240,18 +238,17 @@ def divide_dataset(sc, readtweets):
         print("\n")
     if choice == 3:
         rtword = str(input(
-            ("This function lets you find the most retweeted tweets\n"
-             "You can either choose to find the five most retweeted tweets in general, or choose to search for a keyword\n"
-             "Type a word to search for a chosen keyword, or press enter if you the most retweeted overall\n"
-             "Chosen keywords will not always give a result"
+            ("This function lets you find the most retweeted tweets - overall or containing a chosen keyword\n"
+             "Enter a keyword for a specific search or leave the field empty and press enter to search\n"
+             "This function might take some time. Don't press anything until tweets are shown\n"
              "Type a word, or hit enter. \n")))
         if len(rtword) != 0:
-            print(top5_tweets_with_filterword("temp.csv", rtword))
+            print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", rtword))
             while True:
                 print("Type a new word if you want to try another keyword, or hit enter to proceed")
-                choice = str(input("Type a word or hit enter"))
+                choice = str(input("Type a word and/or hit enter\n"))
                 if len(choice) != 0:
-                    print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", choice))
+                    print(top5_tweets_with_filterword("temp.csv", choice))
                 else:
                     break
         else:
@@ -260,7 +257,8 @@ def divide_dataset(sc, readtweets):
                 print(tweet)
         print("\n")
     if choice == 4:
-        print("You will now be shown the most popular URLs")
+        print("This function might take some time. Don't press anything until URLs are shown\n"
+              "Top five URLs:")
         urls = top5_tweets_with_filterword("temp.csv", "http")
         finalurls = []
         for url in urls:
@@ -284,8 +282,8 @@ def divide_dataset(sc, readtweets):
         make_table(filtered4, "word", "frequency")
         make_histogram(filtered4)
         print("\n")
-        print("You will now be shown tweets containing the most popular URLs")
-        print("You will now be shown the most popular URLs")
+        print("This function might take some time. Don't press anything until URLs are shown\n"
+              "Top five URLs:")
         urls = top5_tweets_with_filterword("temp.csv", "http")
         finalurls = []
         for url in urls:
@@ -295,18 +293,16 @@ def divide_dataset(sc, readtweets):
                 finalurls.append(element)
         for link in finalurls:
             print(link)
-        print("\n")
         rtword = str(input(
-            ("This function lets you find the most retweeted tweets\n"
-             "You can either choose to find the five most retweeted tweets in general, or choose to search for a keyword\n"
-             "Type a word to search for a chosen keyword, or press enter if you the most retweeted overall\n"
-             "Chosen keywords will not always give a result"
+            ("This function lets you find the most retweeted tweets - overall or containing a chosen keyword\n"
+             "Enter a keyword for a specific search or leave the field empty and press enter to search\n"
+             "This function might take some time. Don't press anything until tweets are shown\n"
              "Type a word, or hit enter. \n")))
         if len(rtword) != 0:
-            print(top5_tweets_with_filterword("temp.csv", rtword))
+            print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", rtword))
             while True:
-                print("Type a new word if you want to try another keyword, or hit enter to run other functions")
-                choice = str(input("Type a word or hit enter \n"))
+                print("Type a new word if you want to try another keyword, or hit enter to proceed")
+                choice = str(input("Type a word and/or hit enter\n"))
                 if len(choice) != 0:
                     print(top5_tweets_with_filterword("temp.csv", choice))
                 else:
