@@ -11,8 +11,8 @@ import psutil
 
 
 #These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
-#import nltk
-#nltk.download('stopwords')
+import nltk
+nltk.download('stopwords')
 
 
 stopWords = set(stopwords.words('english'))
@@ -37,7 +37,7 @@ def dialogue(sc):
     print("In this program, tweets from the irma hurricane are analyzed. \n"
           "The dataset contains tweets in the time period from", first, "to", last, "and it contains: ", len(readtweets),
           "number of tweets.")
-    print(" Enter 1 to analysis on the full dataset (1). Enter 2 to choose a subset for analysis(2).")
+    print(" Enter 1 to analyze the full dataset (1). Enter 2 to choose a subset for analysis(2).")
     while True:
         try:
             datasetchoice = int(input("1 or 2\n"))
@@ -62,12 +62,17 @@ def whole_set(sc, readtweets):
     crisislexlist = lex_to_list(crisislex)
     while True:
         try:
-            choice = int(input("Which data do you want to see? \n"
-                               " Do you want to find the most popular words(1), bigrams(2), retweets(3), URLs(4) or all four(5)"))
-            print("\n")
+            choice = int(input(
+                "Do you want to find the most popular words(1), bigrams(2), retweets(3), URLs(4), or all four(5) \n"
+                    "1: Ten most frequently used disaster-related words are displayed in a table and bar chart \n"
+                    "2: Ten most frequently used disaster-related adjacent words are displayed in a table and bar chart \n"
+                    "3: Top five retweets \n"
+                    "4: Top five most linked URLs \n"
+                    "5: Runs all four functions \n"))
+            assert choice == 1 or choice == 2 or choice == 3 or choice == 4 or choice == 5
             break
         except:
-            print("Type 1, 2, 3 or 4")
+            print("Type an int: 1, 2, 3, 4 or 5")
     if choice == 1:
         print("Here are the 10 most disaster-related words in this dataset")
         res1 = sc.wordcounter("irmaHurricaneTweets.csv", 500)
@@ -85,16 +90,15 @@ def whole_set(sc, readtweets):
         print("\n")
     if choice == 3:
         rtword = str(input(
-            ("This function lets you find the most retweeted tweets\n"
-             "You can either choose to find the five most retweeted tweets in general, or choose to search for a keyword\n"
-             "Type a word to search for a chosen keyword, or press enter if you the most retweeted overall\n"
-             "Chosen keywords will not always give a result"
+            ("This function lets you find the most retweeted tweets - overall or containing a chosen keyword\n"
+             "Enter a keyword for a specific search or leave the field empty and press enter to search\n"
+             "This function might take some time. Don't press anything until tweets are shown\n"
              "Type a word, or hit enter. \n")))
         if len(rtword) != 0:
             print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", rtword))
             while True:
                 print("Type a new word if you want to try another keyword, or hit enter to proceed")
-                choice = str(input("Type a word or hit enter"))
+                choice = str(input("Type a word and/or hit enter\n"))
                 if len(choice) != 0:
                     print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", choice))
                 else:
@@ -105,7 +109,8 @@ def whole_set(sc, readtweets):
                 print(tweet)
         print("\n")
     if choice == 4:
-        print("You will now be shown the most popular URLs")
+        print("This function might take some time. Don't type anything \n"
+              "Top five URLs:")
         urls = top5_tweets_with_filterword("irmaHurricaneTweets.csv", "http")
         finalurls = []
         for url in urls:
@@ -162,7 +167,7 @@ def whole_set(sc, readtweets):
     while True:
         try:
             repeat = int(input(
-                "Do you want to stop analyzing(1), do another analysis on this dataset(2), or do an anlysis on a subset of the dataset (3)"))
+                "Do you want to stop analyzing(1), do another analysis on this dataset(2), or do an anlysis on a subset of the dataset (3)\n"))
             assert repeat == 1 or repeat == 2 or repeat == 3
             break
         except:
@@ -181,13 +186,14 @@ def whole_set(sc, readtweets):
 # the function, the user can choose to stop the running of the program in (in the main function in the app),
 # to run divide_dataset() again, or to run divide_dataset().
 def divide_dataset(sc, readtweets):
-    print("Which intervall of the ", len(readtweets), " tweets do you want to extract? Type a number to decide where\n"
-                                                      "the subset starts, and a number to decide where it ends \n"
-                                                       "It should at least contain 10 000 tweets")
+    print("Which intervall of the ", len(readtweets), " tweets do you want to extract? Enter number to decide where\n"
+                                                      "the subset starts, and enter number to decide where it ends \n"
+                                                       "The difference between start and stop should be > 10 000 for "
+                                                      "optimal results")
     while True:
         try:
-            start = int(input("start"))
-            stop = int(input("stop"))
+            start = int(input("start\n"))
+            stop = int(input("stop\n"))
             assert start >= 0 and start < stop and stop <= len(readtweets)
             break
         except:
@@ -201,16 +207,21 @@ def divide_dataset(sc, readtweets):
         adjust_csv(temp, start, stop)
     chosenfirst = readtweets[start][-22:]
     chosenlast = readtweets[stop][-22:]
-    print("You will now analyse tweets from ", chosenfirst, " to ", chosenlast)
+    print("The current subset starts at ", chosenfirst, " and ends at ", chosenlast)
     crisis = lex_to_list(crisislex)
     while True:
         try:
             choice = int(input(
-                "Do you want to find the most popular words(1), bigrams(2), retweets(3), URLs(4), or all four(5)"))
-            print("\n")
+                "Do you want to find the most popular words(1), bigrams(2), retweets(3), URLs(4), or all four(5) \n"
+                    "1: Ten most frequently used disaster-related words are displayed in a table and bar chart \n"
+                    "2: Ten most frequently used disaster-related adjacent words are displayed in a table and bar chart \n"
+                    "3: Top five retweets \n"
+                    "4: Top five most linked URLs \n"
+                    "5: Runs all four functions \n"))
+            assert choice == 1 or choice == 2 or choice == 3 or choice == 4 or choice == 5
             break
         except:
-            print("Type an int: 1, 2 or 3")
+            print("Type an int: 1, 2, 3, 4 or 5")
     if choice == 1:
         res1 = sc.wordcounter("temp.csv", 500)
         filtered1 = (filter_by_crisislex(res1, crisis))
@@ -292,10 +303,10 @@ def divide_dataset(sc, readtweets):
              "Chosen keywords will not always give a result"
              "Type a word, or hit enter. \n")))
         if len(rtword) != 0:
-            print(top5_tweets_with_filterword("irmaHurricaneTweets.csv", rtword))
+            print(top5_tweets_with_filterword("temp.csv", rtword))
             while True:
-                print("Type a new word if you want to try another keyword, or hit enter to proceed")
-                choice = str(input("Type a word or hit enter"))
+                print("Type a new word if you want to try another keyword, or hit enter to run other functions")
+                choice = str(input("Type a word or hit enter \n"))
                 if len(choice) != 0:
                     print(top5_tweets_with_filterword("temp.csv", choice))
                 else:
@@ -309,7 +320,7 @@ def divide_dataset(sc, readtweets):
         try:
             repeat = int(input(
                 "Do you want to stop analyzing(1), do another anlysis on another subset of the dataset (2), "
-                "or do an analysis on the whole dataset (3)"))
+                "or do an analysis on the whole dataset (3) \n"))
             assert repeat == 1 or repeat == 2 or repeat == 3
             break
         except:

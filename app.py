@@ -3,11 +3,7 @@ import csv
 import logging
 from processing import Processing
 from nltk.corpus import stopwords
-# from nltk.tokenize import sent_tokenize, word_tokenize
-import pandas as pd
-import matplotlib.pyplot as plt
 import terminaldialogue as td
-import numpy as np
 
 """
 import itertools

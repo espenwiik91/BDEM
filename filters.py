@@ -1,11 +1,9 @@
 from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize, word_tokenize
-import csv
-import pandas as pd
+
 
 # These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
-# import nltk
-# nltk.download('stopwords')
+import nltk
+nltk.download('stopwords')
 
 
 # Retrieves the stopword set from the ntlk module and adds a number of other string values in addition.
