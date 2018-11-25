@@ -43,6 +43,8 @@ def filter_by_crisislex(wordlist, lex):
         for word in lex:
             if word in element:
                 filteredlist.append(element)
+    if len(filteredlist) > 10:
+        del filteredlist[10:]
     return filteredlist
 
 
@@ -67,6 +69,8 @@ def filter_by_crisislex_for_bigrams(wordlist, lex):
     filteredlist2 = list(filteredlist2)
     filteredlist2.sort()
     filteredlist2.reverse()
+    if len(filteredlist2) > 10:
+        del filteredlist2[10:]
     return filteredlist2
 
 
@@ -79,20 +83,6 @@ def filter_RT_for_bigrams(wordlist):
                 if lexword in wordlist[i][1][0] or lexword in wordlist[i][1][1]:
                     filteredlist.append(wordlist[i])
     return filteredlist
-
-
-"""
-def filter_by_tweet_jiberish(list):
-    stoplist = ['RT', 'http', '@', '//n', '\\n\\n']
-    reslist = []
-    for word in list:
-        for s in stoplist:
-            if s in word:
-                pass
-            else:
-                reslist.append(word)
-    return reslist
-"""
 
 
 def filter_by_stopwords(listofwords, stopWords):

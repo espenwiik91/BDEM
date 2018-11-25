@@ -3,11 +3,12 @@ import csv
 import logging
 from processing import Processing
 from nltk.corpus import stopwords
-#from nltk.tokenize import sent_tokenize, word_tokenize
+# from nltk.tokenize import sent_tokenize, word_tokenize
 import pandas as pd
 import matplotlib.pyplot as plt
 import terminaldialogue as td
 import numpy as np
+
 """
 import itertools
 import operator
@@ -76,32 +77,6 @@ def get_times(openedcsv):
     for line in openedcsv:
         line = line[-22:]
         times.write(line)
-
-
-def make_histogram(listOfTuples):
-    sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
-    df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
-    # print(df)
-    # df.plot(kind='bar', logy=True, x='word')
-    plt.bar(df['word'], df['frequency'], log=True, width=0.8)
-    plt.show()
-
-
-def make_scatterplot(listOfTuples):
-    sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
-    df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
-    s = [20 * df['frequency']]
-    texts = df['word']
-    x = np.random.rand(len(df['word']))
-    y = np.random.rand(len(df['word']))
-    plt.scatter(x, y, s=s, color='red')
-    for i, text in enumerate(texts):
-        x_chords = x[i]
-        y_chords = y[i]
-        plt.scatter(x_chords, y_chords, marker='')
-        plt.text(x_chords, y_chords, text, fontsize=20, color="black")
-    plt.axis('off')
-    plt.show()
 
 
 def get_tweet_list(api, idlist):
