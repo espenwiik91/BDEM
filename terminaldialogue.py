@@ -33,14 +33,14 @@ def dialogue(sc):
     first = readtweets[0][-22:]
     last = readtweets[-1][-22:]
     print("################################################################# \n"
-          "Welcome to this tool for twitter analysis during disaster events")
+          "Welcome to this tool for twitter analysis of disaster events")
     print("In this program, tweets from the irma hurricane are analyzed. \n"
-          "The dataset contains tweets from", first, "to", last, "and it contains: ", len(readtweets),
+          "The dataset contains tweets in the time period from", first, "to", last, "and it contains: ", len(readtweets),
           "number of tweets.")
-    print("Do you want to analyze the whole dataset (1), or choose a subset of the dataset(2)?")
+    print(" Enter 1 to analysis on the full dataset (1). Enter 2 to choose a subset for analysis(2).")
     while True:
         try:
-            datasetchoice = int(input("1 or 2"))
+            datasetchoice = int(input("1 or 2\n"))
             assert datasetchoice == 1 or datasetchoice == 2
             break
         except:
@@ -52,7 +52,12 @@ def dialogue(sc):
         whole_set(sc, readtweets)
         return
 
-#This function is called in either dialogue() or divide_dataset(). It takes a SparkContext object as argument
+#This function is called in either dialogue() or divide_dataset(). It takes a SparkContext object and a csv reader
+#of the csv file "irmaHurricaneTweets" as arguments. Whole_set() is a continuation of dialogue() or divide_dataset().
+# When the function is called, the user can choose to retrieve the most popular words, bigrams, urls and RTs of the
+# whole dataset. When suitable, different visualizations are provided in bar charts. Towards the end of the function,
+# the user can choose to stop the running of the program in (in the main function in the app), run whole_set() again,
+# or to run divide_dataset().
 def whole_set(sc, readtweets):
     crisislexlist = lex_to_list(crisislex)
     while True:
@@ -169,7 +174,12 @@ def whole_set(sc, readtweets):
     if repeat == 3:
         divide_dataset(sc, readtweets)
 
-
+#This function is called in either dialogue() or divide_dataset(). It takes a SparkContext object and a csv reader
+#of the csv file "irmaHurricaneTweets" as arguments. Whole_set() is a continuation of dialogue() or divide_dataset().
+#The exact same functionality as in whole_set() is provided here, but the user of the system is allowed to choose
+#a subset of the csv file "irmaHurricaneTweets" and overwrite "temp.csv" with this content. Towards the end of
+# the function, the user can choose to stop the running of the program in (in the main function in the app),
+# to run divide_dataset() again, or to run divide_dataset().
 def divide_dataset(sc, readtweets):
     print("Which intervall of the ", len(readtweets), " tweets do you want to extract? Type a number to decide where\n"
                                                       "the subset starts, and a number to decide where it ends \n"
@@ -325,7 +335,7 @@ def adjust_csv(source_file, start, end):
 
 
 
-# takes a csv file as argument and writes lines to a list, which is returned
+# takes a txt file as argument and writes strings to a list, which is returned
 def lex_to_list(lex):
     lex = open(lex, "r")
     lex = lex.readlines()
@@ -335,27 +345,29 @@ def lex_to_list(lex):
         res.append(word)
     return res
 
-
+#Takes a csv file with tweet text and tweet date and a string as arguments. Returns a Counter object that contains
+#a list with the five most frequent RTs containing the specific string.
 def top5_tweets_with_filterword(csvFileWithTweetTextAndTweetDate, filterword):
     df = pd.read_csv(csvFileWithTweetTextAndTweetDate,
                      names=['TweetText', 'TweetDate'],
                      encoding='utf-8')
     filtered_tweetText = []
-    for line in df['TweetText'][:100].values:
+    for line in df['TweetText'].values:
         row = pd.Series([line])
         filtered = row.str.contains(filterword, regex=True, flags=re.IGNORECASE)
         if filtered[0] == True:
             filtered_tweetText.append(line)
     counter = Counter(filtered_tweetText).most_common(5)
     return counter
-
-
+"""
+    takes a csv file as argument, and returns a list with the five most frequent RTs in the csv file.
+"""
 def top5_tweets(csvFileWithTweetTextAndTweetDate):
     df = pd.read_csv(csvFileWithTweetTextAndTweetDate,
                      names=['TweetText', 'TweetDate'],
                      encoding='utf-8')
     filtered_tweetText = []
-    for line in df['TweetText'][:100].values:
+    for line in df['TweetText'].values:
         row = pd.Series([line])
         filtered = row.str.contains(" ", regex=True, flags=re.IGNORECASE)
         if filtered[0] == True:
@@ -415,24 +427,10 @@ def make_scatterplot(listOfTuples):
     plt.axis('off')
     plt.show()
 
+#Takes a list of tuples and strings for headers in a table as arguments. Prints a table presenting the list of tuples.
 def make_table(listOfTuples, firstheader, secondheader):
     sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
     df = pd.DataFrame(sorted_data, columns=[firstheader, secondheader])
     print(df)
 
 
-def make_scatterplot(listOfTuples):
-    sorted_data = sorted(listOfTuples, key=lambda x: x[0], reverse=True)
-    df = pd.DataFrame(sorted_data, columns=['frequency', 'word'])
-    s = [20 * df['frequency']]
-    texts = df['word']
-    x = np.random.rand(len(df['word']))
-    y = np.random.rand(len(df['word']))
-    plt.scatter(x, y, s=s, color='red')
-    for i, text in enumerate(texts):
-        x_chords = x[i]
-        y_chords = y[i]
-        plt.scatter(x_chords, y_chords, marker='')
-        plt.text(x_chords, y_chords, text, fontsize=20, color="black")
-    plt.axis('off')
-    plt.show()

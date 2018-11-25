@@ -3,10 +3,9 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 import csv
 import pandas as pd
 
-
-#These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
-#import nltk
-#nltk.download('stopwords')
+# These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
+# import nltk
+# nltk.download('stopwords')
 
 
 # Retrieves the stopword set from the ntlk module and adds a number of other string values in addition.
@@ -59,7 +58,8 @@ def filter_by_crisislex_for_bigrams(wordlist, lex):
         del filteredlist2[10:]
     return filteredlist2
 
-#Takes a list of words and the stopWord set from nltk as arguments. Declares a new list. Adds the 2000 first words from the list
+
+# Takes a list of words and the stopWord set from nltk as arguments. Declares a new list. Adds the 2000 first words from the list
 # passed as an argument to the returned list - iff word does not exist in the stopWord set.
 def filter_by_stopwords(listofwords, stopWords):
     filteredlist = []
@@ -77,8 +77,10 @@ def filter_by_stopwords(listofwords, stopWords):
 
 
 def find_crisis_word_in_total_word(stopwordlist, disasterlist):
+    reslist = []
     for element in stopwordlist:
         for d in disasterlist:
             # d, element = d.split(","), element.split(",")
             if d[1].lower() in element[1].lower():
-                print("yolo")
+                reslist.append(element[1])
+    return reslist
