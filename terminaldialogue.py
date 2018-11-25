@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from operator import itemgetter
 
-
 """
 These to rows have to be run the first time one uses the stopword filtering method: filter_by_stopwords()
 import nltk
@@ -21,13 +20,12 @@ stopWords = set(stopwords.words('english'))
 # adding 'RT, 'http', '@', '\\n\\n' to the set of stopwords because such information is non-informative for
 # several analysis purposes.
 stopWords.update(['RT', 'http', '@', '\\n\\n'])
-
+tempsetadjusted = False
 crisislex = "CrisisLexLexicon/CrisisLexRec.txt"
 
 
 def dialogue(sc):
     tweetcsv = open("irmaHurricaneTweets.csv", "r")
-    temp = open("temp.csv", "w+")
     readtweets = tweetcsv.readlines()
     # print(sc.retweets(readtweets))
     first = readtweets[0][-22:]
@@ -49,14 +47,14 @@ def dialogue(sc):
         except:
             print("type 1 or 2")
     if datasetchoice == 2:
-        divide_dataset(sc, readtweets, temp)
+        divide_dataset(sc, readtweets)
         return
     if datasetchoice == 1:
-        whole_set(sc, readtweets, temp)
+        whole_set(sc, readtweets)
         return
 
 
-def whole_set(sc, readtweets, temp):
+def whole_set(sc, readtweets):
     crisislexlist = lex_to_list(crisislex)
     while True:
         try:
@@ -159,12 +157,12 @@ def whole_set(sc, readtweets, temp):
     if repeat == 1:
         print("Finished")
     if repeat == 2:
-        whole_set(sc, readtweets, temp)
+        whole_set(sc, readtweets)
     if repeat == 3:
-        divide_dataset(sc, readtweets, temp)
+        divide_dataset(sc, readtweets)
 
 
-def divide_dataset(sc, readtweets, temp):
+def divide_dataset(sc, readtweets):
     print("Which intervall of the ", len(readtweets), " tweets do you want to extract? Type a number to decide where\n"
                                                       "the subset starts, and a number to decide where it ends \n"
                                                       "It should at least contain 10 000 tweets")
@@ -173,7 +171,13 @@ def divide_dataset(sc, readtweets, temp):
         stop = int(input("stop"))
     except:
         print("type two numbers")
-    adjust_csv(readtweets, start, stop, temp) #TODO FIKSE!!!
+    global tempsetadjusted
+    if tempsetadjusted == False:
+        adjust_csv(readtweets, start, stop)
+
+    else:
+        temp = open("temp.csv", "w+")
+        adjust_csv(temp, start, stop)
     chosenfirst = readtweets[start][-22:]
     chosenlast = readtweets[stop][-22:]
     print("You will now analyse tweets from ", chosenfirst, " to ", chosenlast)
@@ -281,20 +285,22 @@ def divide_dataset(sc, readtweets, temp):
     if repeat == 1:
         print("Finished")
     if repeat == 2:
-        divide_dataset(sc, readtweets, temp)
+        divide_dataset(sc, readtweets)
     if repeat == 3:
-        whole_set(sc, readtweets, temp)
+        whole_set(sc, readtweets)
 
     print("Finished")
 
 
-def adjust_csv(source_file, start, end, dest_name):
-    writer = csv.writer(dest_name)
+def adjust_csv(source_file, start, end):
+    temp = open("temp.csv", "w+")
+    writer = csv.writer(temp)
     count = 0
     for row in csv.reader(source_file):
         if start <= count <= end:
             writer.writerow(row)
         count += 1
+
 
 
 # takes a csv file as argument and writes lines to a list, which is returned
