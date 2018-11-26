@@ -105,6 +105,15 @@ def main():
     # These function calls has to be done the first time running the program.
     # They are used to write twitter texts to the file "irmaHurricaneTweets.csv
     Logger = logging.getLogger('get_tweets_by_id')
+
+    """
+        ******************************************
+        TWEET COLLECTION;
+        IF(!) you want to collect your own dataset instead of the sample.
+        The four lines below this comment must be uncommented(remove #) and run.
+        Remember to comment back in order to not overwrite the file again when running functionality on dataset 
+    
+    """
     #fhand = open("irmaHurricaneTweets.csv", "w+")
     #fhand.truncate()
     #fhand.close()
