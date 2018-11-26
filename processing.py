@@ -52,6 +52,7 @@ class Processing:
         filtered = words_filter.collect()
         # res = self.most_common(filtered)
         return filtered
+
     #Stops the running of a SparkContext object.
     def stopspark(self):
         self.sc.stop()
